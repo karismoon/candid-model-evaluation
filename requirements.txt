@@ -1,1 +1,5 @@
 streamlit
+openai>=1.51.0
+deepeval
+pandas
+matplotlib
