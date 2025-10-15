@@ -370,7 +370,6 @@ else:
 
             gen_api_key = st.text_input(
                 f"🔑 {provider} API Key (for generation)",
-                type="password",
                 key="gen_api_key",
             )
 
@@ -408,7 +407,6 @@ else:
             st.markdown("**DeepEval Evaluation Settings**")
             deepeval_api_key = st.text_input(
                 "🔑 OpenAI API Key (for DeepEval evaluation)",
-                type="password",
                 key="deepeval_api_key",
             )
             eval_model = st.selectbox(
@@ -423,7 +421,6 @@ else:
         st.markdown("**DeepEval Evaluation Settings**")
         deepeval_api_key = st.text_input(
             "🔑 OpenAI API Key (for DeepEval evaluation)",
-            type="password",
             key="deepeval_api_key_eval_only",
         )
         eval_model = st.selectbox(
