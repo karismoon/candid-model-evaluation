@@ -212,7 +212,7 @@ def generate_outputs_via_openai(df: pd.DataFrame, client: OpenAI, model: str, sy
 # Streamlit UI
 # --------------------------
 
-st.set_page_config(page_title="DeepEval Streamlit", layout="wide")
+st.set_page_config(page_title="Model Evaluation", layout="wide")
 
 # Sidebar: Mode switch + persistent storage controls
 mode = st.sidebar.radio("Mode", ("🧩 Rubric Editor", "🤖 Model & Prompt Testing"))
@@ -296,13 +296,23 @@ else:
 
     # Rubrics status / quick download
     st.subheader("Rubrics in use")
+
     if st.session_state.get("rubrics"):
         st.write(f"{len(st.session_state['rubrics'])} rubric(s) loaded in session.")
-        st.json(st.session_state["rubrics"])
+        
+        # Collapsible JSON viewer
+        with st.expander("View rubrics (click to expand)", expanded=False):
+            st.json(st.session_state["rubrics"])
+        
         if st.button("Download current rubrics.json"):
             buf = io.StringIO()
             json.dump(st.session_state["rubrics"], buf, indent=2)
-            st.download_button("Click to download", buf.getvalue(), file_name="rubrics.json", mime="application/json")
+            st.download_button(
+                "Click to download",
+                buf.getvalue(),
+                file_name="rubrics.json",
+                mime="application/json",
+            )
     else:
         st.warning("No rubrics loaded. Switch to Rubric Editor to add or upload rubrics.")
         st.stop()
