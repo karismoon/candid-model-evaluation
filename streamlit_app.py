@@ -454,7 +454,7 @@ else:
 
         # If generation needed
         if ("actual_output" not in df.columns) or (not use_existing_actuals):
-            if not api_key:
+            if not gen_api_key:
                 st.error("API key is required to generate outputs.")
                 st.stop()
         try:
