@@ -394,35 +394,44 @@ else:
         # Convert NaN to empty strings for display
         results_df_display = results_df.fillna("")
 
-        # Use st.data_editor for interactivity
-        selected_row_idx = st.data_editor(
-            results_df_display,
-            use_container_width=True,
-            hide_index=True,
-            key="results_table",
-            disabled=True,  # read-only
-            column_config=None
+        # --- Expandable rows to show full text on click ---
+        st.markdown("### Inspect individual results")
+
+        # Build readable labels for the dropdown
+        row_labels = [
+            f"{i}: {row['input'][:60]}{'...' if len(row['input']) > 60 else ''}"
+            for i, row in st.session_state["results"].iterrows()
+        ]
+
+        # Create a selectbox safely
+        selected_label = st.selectbox(
+            "Select a row to expand",
+            options=row_labels,
+            index=0 if len(row_labels) > 0 else None,
+            placeholder="Choose a test case to view details",
         )
 
-        # If a row is selected, show expanded details
-        if selected_row_idx is not None and len(selected_row_idx) > 0:
-            idx = list(selected_row_idx.keys())[0]
-            selected = results_df.iloc[int(idx)]
+        # Only continue if user has actually selected something
+        if selected_label:
+            # Parse index safely (split before the colon)
+            try:
+                idx_str = selected_label.split(":")[0].strip()
+                idx = int(idx_str)
+                selected = st.session_state["results"].iloc[idx]
+            except (ValueError, IndexError):
+                st.error("Unable to parse selected index.")
+            else:
+                st.markdown(f"#### Expanded view for test case {idx}")
+                st.write(f"**Input:**\n\n{selected['input']}")
+                st.write(f"**Expected Output:**\n\n{selected['expected_output']}")
+                st.write(f"**Actual Output:**\n\n{selected['actual_output']}")
 
-            st.markdown("---")
-            st.subheader("📄 Expanded Row Details")
+                # Display all scoring columns clearly
+                score_cols = [c for c in selected.index if c.endswith("_score") or c.endswith("_reason")]
+                for col in score_cols:
+                    with st.expander(col):
+                        st.write(selected[col])
 
-            # Show key fields in expandable format
-            st.markdown(f"**Input:**\n\n{selected.get('input', '')}")
-            st.markdown(f"**Expected Output:**\n\n{selected.get('expected_output', '')}")
-            st.markdown(f"**Actual Output:**\n\n{selected.get('actual_output', '')}")
-
-            # Collect and display all metric reasons
-            reason_cols = [c for c in results_df.columns if c.endswith("_reason")]
-            if reason_cols:
-                st.markdown("#### Evaluation Reasons")
-                for col in reason_cols:
-                    st.markdown(f"**{col.replace('_reason', '')}:**\n\n{selected.get(col, '')}")
 
 
         # Download results CSV
