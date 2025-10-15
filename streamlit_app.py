@@ -301,7 +301,7 @@ else:
         st.write(f"{len(st.session_state['rubrics'])} rubric(s) loaded in session.")
         
         # Collapsible JSON viewer
-        with st.expander("View rubrics (click to expand)", expanded=False):
+        with st.expander("View rubrics", expanded=False):
             st.json(st.session_state["rubrics"])
         
         if st.button("Download current rubrics.json"):
@@ -348,12 +348,48 @@ else:
             df_inputs = st.session_state["df_inputs"]
             st.info("Using previously uploaded test_cases.csv in session.")
 
-    # API key and model selection
-    st.subheader("Model & Prompt")
-    api_key = st.text_input("🔑 OpenAI API Key")
-    os.environ["OPENAI_API_KEY"] = api_key
-    model = st.selectbox("Model", options=["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"], index=0)
-    system_prompt = st.text_area("System prompt (system message)", value="You are a helpful agent.", height=120)
+    # --------------------------
+    # API keys and model selection
+    # --------------------------
+    st.subheader("🔧 Model & API Configuration")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("**Output Generation (user model)**")
+        provider = st.selectbox(
+            "Provider for output generation",
+            options=["OpenAI", "Anthropic (Claude)", "Google (Gemini)"],
+            index=0
+        )
+
+        gen_api_key = st.text_input(f"🔑 {provider} API Key (for generation)", type="password")
+
+        if provider == "OpenAI":
+            gen_model = st.selectbox("Model (OpenAI)", ["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"], index=0)
+        elif provider == "Anthropic (Claude)":
+            gen_model = st.selectbox("Model (Claude)", ["claude-3-5-sonnet", "claude-3-opus", "claude-3-haiku"], index=0)
+        else:
+            gen_model = st.selectbox("Model (Gemini)", ["gemini-1.5-pro", "gemini-1.5-flash"], index=0)
+
+    with col2:
+        st.markdown("**DeepEval Evaluation Settings**")
+        deepeval_api_key = st.text_input("🔑 OpenAI API Key (for DeepEval evaluation)", type="password")
+        eval_model = st.selectbox(
+            "Model for evaluation (OpenAI only)",
+            ["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"],
+            index=0
+        )
+
+    # Assign DeepEval key to environment for DeepEval internals
+    if deepeval_api_key:
+        os.environ["OPENAI_API_KEY"] = deepeval_api_key
+
+    system_prompt = st.text_area(
+        "System prompt for generation",
+        value="You are a helpful agent.",
+        height=120,
+    )
 
     # Run / Evaluate section
     st.subheader("Run Evaluation")
@@ -374,14 +410,59 @@ else:
             if not api_key:
                 st.error("API key is required to generate outputs.")
                 st.stop()
-            client = OpenAI(api_key=api_key)
-            # Generate
-            try:
-                outputs = generate_outputs_via_openai(df, client, model, system_prompt)
-                df["actual_output"] = outputs
-            except Exception as e:
-                st.error(f"Error generating outputs from OpenAI: {e}")
-                st.stop()
+        try:
+            if provider == "OpenAI":
+                if not gen_api_key:
+                    st.error("Please provide your OpenAI API key for generation.")
+                    st.stop()
+                client = OpenAI(api_key=gen_api_key)
+                outputs = generate_outputs_via_openai(df, client, gen_model, system_prompt)
+
+            elif provider == "Anthropic (Claude)":
+                from anthropic import Anthropic
+                if not gen_api_key:
+                    st.error("Please provide your Anthropic API key for generation.")
+                    st.stop()
+                client = Anthropic(api_key=gen_api_key)
+                outputs = []
+                total = len(df)
+                progress_bar = st.progress(0)
+                for i, row in df.iterrows():
+                    user_input = row["input"]
+                    with st.spinner(f"Generating output {i+1}/{total}..."):
+                        msg = client.messages.create(
+                            model=gen_model,
+                            max_tokens=500,
+                            messages=[
+                                {"role": "system", "content": system_prompt},
+                                {"role": "user", "content": user_input},
+                            ],
+                        )
+                        outputs.append(msg.content[0].text)
+                        progress_bar.progress((i + 1) / total)
+                progress_bar.empty()
+
+            elif provider == "Google (Gemini)":
+                import google.generativeai as genai
+                if not gen_api_key:
+                    st.error("Please provide your Google API key for generation.")
+                    st.stop()
+                genai.configure(api_key=gen_api_key)
+                model_instance = genai.GenerativeModel(gen_model)
+                outputs = []
+                total = len(df)
+                progress_bar = st.progress(0)
+                for i, row in df.iterrows():
+                    user_input = row["input"]
+                    with st.spinner(f"Generating output {i+1}/{total}..."):
+                        resp = model_instance.generate_content(f"{system_prompt}\n\nUser: {user_input}")
+                        outputs.append(resp.text)
+                        progress_bar.progress((i + 1) / total)
+                progress_bar.empty()
+
+        except Exception as e:
+            st.error(f"Error generating outputs: {e}")
+            st.stop()
         else:
             # CSV already has actual_output
             st.info("Using `actual_output` from uploaded CSV.")
