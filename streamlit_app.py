@@ -355,36 +355,60 @@ else:
     # --------------------------
     st.subheader("🔧 Model & API Configuration")
 
-    col1, col2 = st.columns(2)
+    if not use_existing_actuals:
+        col1, col2 = st.columns(2)
 
-    with col1:
-        st.markdown("**Output Generation (user model)**")
-        provider = st.selectbox(
-            "Provider for output generation",
-            options=["OpenAI", "Anthropic (Claude)", "Google (Gemini)"],
-            index=0
-        )
+        # ---- Generation Settings ----
+        with col1:
+            st.markdown("**Output Generation (user model)**")
+            provider = st.selectbox(
+                "Provider for output generation",
+                options=["OpenAI", "Anthropic (Claude)", "Google (Gemini)"],
+                index=0
+            )
 
-        gen_api_key = st.text_input(f"🔑 {provider} API Key (for generation)", type="password")
+            gen_api_key = st.text_input(f"🔑 {provider} API Key (for generation)", type="password")
 
-        if provider == "OpenAI":
-            gen_model = st.selectbox("Model (OpenAI)", ["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"], index=0)
-        elif provider == "Anthropic (Claude)":
-            gen_model = st.selectbox("Model (Claude)", ["claude-3-5-sonnet", "claude-3-opus", "claude-3-haiku"], index=0)
-        else:
-            gen_model = st.selectbox("Model (Gemini)", ["gemini-1.5-pro", "gemini-1.5-flash"], index=0)
+            if provider == "OpenAI":
+                gen_model = st.selectbox("Model (OpenAI)", ["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"], index=0)
+            elif provider == "Anthropic (Claude)":
+                gen_model = st.selectbox("Model (Claude)", ["claude-3-5-sonnet", "claude-3-opus", "claude-3-haiku"], index=0)
+            else:
+                gen_model = st.selectbox("Model (Gemini)", ["gemini-1.5-pro", "gemini-1.5-flash"], index=0)
 
-    with col2:
+            system_prompt = st.text_area(
+                "System prompt for generation",
+                value="You are a helpful agent.",
+                height=120,
+            )
+
+        # ---- DeepEval Settings ----
+        with col2:
+            st.markdown("**DeepEval Evaluation Settings**")
+            deepeval_api_key = st.text_input("🔑 OpenAI API Key (for DeepEval evaluation)", type="password")
+            eval_model = st.selectbox(
+                "Model for evaluation (OpenAI only)",
+                ["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"],
+                index=0
+            )
+
+    else:
+        # ---- Evaluation-only mode ----
         st.markdown("**DeepEval Evaluation Settings**")
-
+        deepeval_api_key = st.text_input("🔑 OpenAI API Key (for DeepEval evaluation)", type="password")
         eval_model = st.selectbox(
             "Model for evaluation (OpenAI only)",
             ["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"],
             index=0
         )
+        provider = None
+        gen_model = None
+        gen_api_key = None
+        system_prompt = None
 
-        deepeval_api_key = st.text_input("🔑 OpenAI API Key (for DeepEval evaluation)", type="password")
-
+    # Set DeepEval key for internal use
+    if deepeval_api_key:
+        os.environ["OPENAI_API_KEY"] = deepeval_api_key
 
     # Assign DeepEval key to environment for DeepEval internals
     if deepeval_api_key:
