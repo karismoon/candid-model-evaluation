@@ -389,50 +389,8 @@ else:
     # Show results if available
     if st.session_state.get("results") is not None:
         results_df: pd.DataFrame = st.session_state["results"]
-        st.subheader("Results table (click a row to expand details)")
-
-        # Convert NaN to empty strings for display
-        results_df_display = results_df.fillna("")
-
-        # --- Expandable rows to show full text on click ---
-        st.markdown("### Inspect individual results")
-
-        # Build readable labels for the dropdown
-        row_labels = [
-            f"{i}: {row['input'][:60]}{'...' if len(row['input']) > 60 else ''}"
-            for i, row in st.session_state["results"].iterrows()
-        ]
-
-        # Create a selectbox safely
-        selected_label = st.selectbox(
-            "Select a row to expand",
-            options=row_labels,
-            index=0 if len(row_labels) > 0 else None,
-            placeholder="Choose a test case to view details",
-        )
-
-        # Only continue if user has actually selected something
-        if selected_label:
-            # Parse index safely (split before the colon)
-            try:
-                idx_str = selected_label.split(":")[0].strip()
-                idx = int(idx_str)
-                selected = st.session_state["results"].iloc[idx]
-            except (ValueError, IndexError):
-                st.error("Unable to parse selected index.")
-            else:
-                st.markdown(f"#### Expanded view for test case {idx}")
-                st.write(f"**Input:**\n\n{selected['input']}")
-                st.write(f"**Expected Output:**\n\n{selected['expected_output']}")
-                st.write(f"**Actual Output:**\n\n{selected['actual_output']}")
-
-                # Display all scoring columns clearly
-                score_cols = [c for c in selected.index if c.endswith("_score") or c.endswith("_reason")]
-                for col in score_cols:
-                    with st.expander(col):
-                        st.write(selected[col])
-
-
+        st.subheader("Results table")
+        st.dataframe(results_df.fillna(""), use_container_width=True)
 
         # Download results CSV
         csv_buf = results_df.to_csv(index=False)
@@ -468,4 +426,3 @@ else:
 
     else:
         st.info("No results to show yet. Click **Run DeepEval now** to evaluate.")
-
