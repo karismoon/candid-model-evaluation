@@ -374,12 +374,15 @@ else:
 
     with col2:
         st.markdown("**DeepEval Evaluation Settings**")
-        deepeval_api_key = st.text_input("🔑 OpenAI API Key (for DeepEval evaluation)", type="password")
+
         eval_model = st.selectbox(
             "Model for evaluation (OpenAI only)",
             ["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"],
             index=0
         )
+
+        deepeval_api_key = st.text_input("🔑 OpenAI API Key (for DeepEval evaluation)", type="password")
+
 
     # Assign DeepEval key to environment for DeepEval internals
     if deepeval_api_key:
