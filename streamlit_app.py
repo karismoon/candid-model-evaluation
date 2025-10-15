@@ -389,8 +389,41 @@ else:
     # Show results if available
     if st.session_state.get("results") is not None:
         results_df: pd.DataFrame = st.session_state["results"]
-        st.subheader("Results table")
-        st.dataframe(results_df.fillna(""), use_container_width=True)
+        st.subheader("Results table (click a row to expand details)")
+
+        # Convert NaN to empty strings for display
+        results_df_display = results_df.fillna("")
+
+        # Use st.data_editor for interactivity
+        selected_row_idx = st.data_editor(
+            results_df_display,
+            use_container_width=True,
+            hide_index=True,
+            key="results_table",
+            disabled=True,  # read-only
+            column_config=None
+        )
+
+        # If a row is selected, show expanded details
+        if selected_row_idx is not None and len(selected_row_idx) > 0:
+            idx = list(selected_row_idx.keys())[0]
+            selected = results_df.iloc[int(idx)]
+
+            st.markdown("---")
+            st.subheader("📄 Expanded Row Details")
+
+            # Show key fields in expandable format
+            st.markdown(f"**Input:**\n\n{selected.get('input', '')}")
+            st.markdown(f"**Expected Output:**\n\n{selected.get('expected_output', '')}")
+            st.markdown(f"**Actual Output:**\n\n{selected.get('actual_output', '')}")
+
+            # Collect and display all metric reasons
+            reason_cols = [c for c in results_df.columns if c.endswith("_reason")]
+            if reason_cols:
+                st.markdown("#### Evaluation Reasons")
+                for col in reason_cols:
+                    st.markdown(f"**{col.replace('_reason', '')}:**\n\n{selected.get(col, '')}")
+
 
         # Download results CSV
         csv_buf = results_df.to_csv(index=False)
