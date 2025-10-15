@@ -391,6 +391,23 @@ else:
     if st.session_state.get("results") is not None:
         results_df: pd.DataFrame = st.session_state["results"]
         st.subheader("Results table")
+        st.markdown("""
+            <style>
+            /* Make text wrap instead of truncating */
+            div[data-testid="stDataFrame"] td {
+                white-space: normal !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+                max-width: 600px !important; /* adjust as needed */
+            }
+            div[data-testid="stDataFrame"] th {
+                white-space: normal !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+                max-width: 300px !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
         st.dataframe(results_df.fillna(""), use_container_width=True)
 
         # Download results CSV
