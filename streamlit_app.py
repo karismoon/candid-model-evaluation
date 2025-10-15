@@ -341,7 +341,8 @@ else:
 
     # API key and model selection
     st.subheader("Model & Prompt")
-    api_key = st.text_input("🔑 OpenAI API Key (required if generating outputs)", type="password")
+    api_key = st.text_input("🔑 OpenAI API Key")
+    os.environ["OPENAI_API_KEY"] = api_key
     model = st.selectbox("Model", options=["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"], index=0)
     system_prompt = st.text_area("System prompt (system message)", value="You are a helpful agent.", height=120)
 
