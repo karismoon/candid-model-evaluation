@@ -84,7 +84,7 @@ def rubrics_to_df(rubrics: List[Dict[str, Any]]) -> pd.DataFrame:
         })
     return pd.DataFrame(rows)
 
-def load_metrics(path: str, mode: str = "multi_turn") -> List[GEval]:
+def load_metrics(path: str, mode: str = "multi_turn", eval_model: Optional[str] = None) -> List[GEval]:
     """
     Load rubrics from a JSON file path and return GEval metric objects.
     If the JSON contains extra trailing data, attempt to handle it.
@@ -112,10 +112,12 @@ def load_metrics(path: str, mode: str = "multi_turn") -> List[GEval]:
         }
         if "threshold" in rubric and rubric["threshold"] is not None:
             kwargs["threshold"] = rubric["threshold"]
+        if eval_model:
+            kwargs["model"] = eval_model   
         metrics.append(GEval(**kwargs))
     return metrics
 
-def run_full_deepeval(df: pd.DataFrame, rubrics: List[Dict[str, Any]], mode: str = "single_turn") -> pd.DataFrame:
+def run_full_deepeval(df: pd.DataFrame, rubrics: List[Dict[str, Any]], mode: str = "single_turn", eval_model: Optional[str] = None,) -> pd.DataFrame:
     """
     Runs DeepEval for all metrics in rubrics (passed as list of dicts)
     and returns a detailed DataFrame including per-metric scores & reasons,
@@ -126,7 +128,7 @@ def run_full_deepeval(df: pd.DataFrame, rubrics: List[Dict[str, Any]], mode: str
     with open(tmp_path, "w", encoding="utf-8") as f:
         json.dump(rubrics, f, indent=2)
 
-    metrics = load_metrics(tmp_path, mode=mode)
+    metrics = load_metrics(tmp_path, mode=mode, eval_model=eval_model)
     all_results = []
 
     for i, row in df.iterrows():
@@ -473,7 +475,7 @@ else:
         # Run DeepEval scoring
         with st.spinner("Running DeepEval scoring..."):
             try:
-                results_df = run_full_deepeval(df, st.session_state["rubrics"], mode="single_turn")
+                results_df = run_full_deepeval(df, st.session_state["rubrics"], mode="single_turn", eval_model=eval_model)
                 st.session_state["results"] = results_df
                 st.success("DeepEval run complete.")
             except Exception as e:
