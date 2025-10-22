@@ -105,17 +105,39 @@ def load_metrics(path: str, mode: str = "multi_turn", eval_model: Optional[str] 
     for rubric in rubrics:
         if mode not in rubric.get("applies_to", []):
             continue
+
+        # Map old DeepEval 0.x parameter names to new 3.x ones
+        param_map = {
+            "input": "input_text",
+            "expected_output": "expected_output_text",
+            "actual_output": "actual_output_text",
+        }
+
+        # Safely translate rubric params to the correct LLMTestCaseParams attributes
+        mapped_params = []
+        for p in rubric["params"]:
+            mapped_name = param_map.get(p, p)
+            try:
+                mapped_params.append(getattr(LLMTestCaseParams, mapped_name))
+            except AttributeError:
+                print(f"⚠️ Warning: Unknown LLMTestCaseParam '{p}' (mapped to '{mapped_name}')")
+
         kwargs = {
             "name": rubric["name"],
             "evaluation_steps": rubric["steps"],
-            "evaluation_params": [getattr(LLMTestCaseParams, p) for p in rubric["params"]],
+            "evaluation_params": mapped_params,
         }
+
         if "threshold" in rubric and rubric["threshold"] is not None:
             kwargs["threshold"] = rubric["threshold"]
+
         if eval_model:
-            kwargs["model"] = eval_model   
+            kwargs["model"] = eval_model
+
         metrics.append(GEval(**kwargs))
+
     return metrics
+
 
 def run_full_deepeval(df: pd.DataFrame, rubrics: List[Dict[str, Any]], mode: str = "single_turn", eval_model: Optional[str] = None,) -> pd.DataFrame:
     """
