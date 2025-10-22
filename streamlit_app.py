@@ -156,9 +156,9 @@ def run_full_deepeval(df: pd.DataFrame, rubrics: List[Dict[str, Any]], mode: str
     for i, row in df.iterrows():
 
         test_case = LLMTestCase(
-            input_text=row["input"],
-            actual_output_text=row["actual_output"],
-            expected_output_text=row["expected_output"]
+            input=row["input"],
+            actual_output=row["actual_output"],
+            expected_output=row["expected_output"]
         )
 
         metric_scores = {}
