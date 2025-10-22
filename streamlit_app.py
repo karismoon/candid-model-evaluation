@@ -523,7 +523,15 @@ else:
                 st.session_state["results"] = results_df
                 st.success("DeepEval run complete.")
             except Exception as e:
-                st.error(f"Error during evaluation: {e}")
+                st.error("⚠️ Error during evaluation — full details below:")
+                st.code(traceback.format_exc())  # full stack trace
+                # Also print to console (visible in terminal logs)
+                print(traceback.format_exc())
+
+                # Optional: print first few rows for context
+                st.write("First few rows of df being evaluated:")
+                st.dataframe(df.head())
+
                 st.stop()
 
     # Show results if available
