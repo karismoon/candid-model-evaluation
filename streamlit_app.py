@@ -132,7 +132,6 @@ def run_full_deepeval(df: pd.DataFrame, rubrics: List[Dict[str, Any]], mode: str
     all_results = []
 
     for i, row in df.iterrows():
-        st.write(df.columns)
 
         test_case = LLMTestCase(
             input=row["input"],
@@ -328,6 +327,8 @@ else:
     if uploaded_csv is not None:
         try:
             df_inputs = pd.read_csv(uploaded_csv)
+            st.write("📄 Uploaded CSV columns:", list(df_inputs.columns))  # 👈 ADD THIS LINE
+
             # Ensure required columns exist
             if "input" not in df_inputs.columns or "expected_output" not in df_inputs.columns:
                 st.error("CSV must contain at least `input` and `expected_output` columns.")
