@@ -15,18 +15,6 @@ import matplotlib.pyplot as plt
 # Helper functions
 # --------------------------
 
-def default_rubric_example() -> List[Dict[str, Any]]:
-    # Minimal example entry so users see structure when none uploaded
-    return [
-        {
-            "name": "Hallucination Rate",
-            "params": ["input", "actual_output", "expected_output"],
-            "steps": "Check factual consistency between actual_output and expected_output.",
-            "threshold": 0.0,
-            "applies_to": ["single_turn"]
-        }
-    ]
-
 def parse_rubrics_from_df(df: pd.DataFrame) -> List[Dict[str, Any]]:
     """
     Convert the editable dataframe back into a list of rubric dicts.
@@ -221,8 +209,6 @@ st.set_page_config(page_title="Model Evaluation", layout="wide")
 mode = st.sidebar.radio("Mode", ("🧩 Rubric Editor", "🤖 Model & Prompt Testing"))
 
 # Initialize session state containers
-if "rubrics" not in st.session_state:
-    st.session_state["rubrics"] = default_rubric_example()
 if "df_inputs" not in st.session_state:
     st.session_state["df_inputs"] = None
 if "results" not in st.session_state:
