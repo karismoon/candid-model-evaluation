@@ -455,78 +455,78 @@ else:
     run_button = st.button("Run DeepEval now")
 
     if run_button:
-        # Ensure rubrics exist
         rubrics = st.session_state.get("rubrics", [])
         if not rubrics:
             st.error("No rubrics in session. Switch to Rubric Editor to add rubrics.")
             st.stop()
 
-        # Work on a copy of df_inputs
         df = st.session_state["df_inputs"].copy()
 
-        # If generation needed
-        if ("actual_output" not in df.columns) or (not use_existing_actuals):
+        # --- Decide whether to use or ignore existing actual_output ---
+        should_generate = not use_existing_actuals  # user didn't check box → generate outputs
+
+        if should_generate:
+            # We’ll overwrite or create actual_output from model generation
             if not gen_api_key:
                 st.error("API key is required to generate outputs.")
                 st.stop()
-        try:
-            if provider == "OpenAI":
-                if not gen_api_key:
-                    st.error("Please provide your OpenAI API key for generation.")
-                    st.stop()
-                client = OpenAI(api_key=gen_api_key)
-                outputs = generate_outputs_via_openai(df, client, gen_model, system_prompt)
 
-            elif provider == "Anthropic (Claude)":
-                from anthropic import Anthropic
-                if not gen_api_key:
-                    st.error("Please provide your Anthropic API key for generation.")
-                    st.stop()
-                client = Anthropic(api_key=gen_api_key)
-                outputs = []
-                total = len(df)
-                progress_bar = st.progress(0)
-                for i, row in df.iterrows():
-                    user_input = row["input"]
-                    with st.spinner(f"Generating output {i+1}/{total}..."):
-                        msg = client.messages.create(
-                            model=gen_model,
-                            max_tokens=500,
-                            messages=[
-                                {"role": "system", "content": system_prompt},
-                                {"role": "user", "content": user_input},
-                            ],
-                        )
-                        outputs.append(msg.content[0].text)
-                        progress_bar.progress((i + 1) / total)
-                progress_bar.empty()
+            try:
+                if provider == "OpenAI":
+                    client = OpenAI(api_key=gen_api_key)
+                    outputs = generate_outputs_via_openai(df, client, gen_model, system_prompt)
 
-            elif provider == "Google (Gemini)":
-                import google.generativeai as genai
-                if not gen_api_key:
-                    st.error("Please provide your Google API key for generation.")
-                    st.stop()
-                genai.configure(api_key=gen_api_key)
-                model_instance = genai.GenerativeModel(gen_model)
-                outputs = []
-                total = len(df)
-                progress_bar = st.progress(0)
-                for i, row in df.iterrows():
-                    user_input = row["input"]
-                    with st.spinner(f"Generating output {i+1}/{total}..."):
-                        resp = model_instance.generate_content(f"{system_prompt}\n\nUser: {user_input}")
-                        outputs.append(resp.text)
-                        progress_bar.progress((i + 1) / total)
-                progress_bar.empty()
+                elif provider == "Anthropic (Claude)":
+                    from anthropic import Anthropic
+                    client = Anthropic(api_key=gen_api_key)
+                    outputs = []
+                    total = len(df)
+                    progress_bar = st.progress(0)
+                    for i, row in df.iterrows():
+                        user_input = row["input"]
+                        with st.spinner(f"Generating output {i+1}/{total}..."):
+                            msg = client.messages.create(
+                                model=gen_model,
+                                max_tokens=500,
+                                messages=[
+                                    {"role": "system", "content": system_prompt},
+                                    {"role": "user", "content": user_input},
+                                ],
+                            )
+                            outputs.append(msg.content[0].text)
+                            progress_bar.progress((i + 1) / total)
+                    progress_bar.empty()
 
-        except Exception as e:
-            st.error(f"Error generating outputs: {e}")
-            st.stop()
+                elif provider == "Google (Gemini)":
+                    import google.generativeai as genai
+                    genai.configure(api_key=gen_api_key)
+                    model_instance = genai.GenerativeModel(gen_model)
+                    outputs = []
+                    total = len(df)
+                    progress_bar = st.progress(0)
+                    for i, row in df.iterrows():
+                        user_input = row["input"]
+                        with st.spinner(f"Generating output {i+1}/{total}..."):
+                            resp = model_instance.generate_content(f"{system_prompt}\n\nUser: {user_input}")
+                            outputs.append(resp.text)
+                            progress_bar.progress((i + 1) / total)
+                    progress_bar.empty()
+
+                df["actual_output"] = outputs
+                st.success("✅ Generated new model outputs.")
+
+            except Exception as e:
+                st.error(f"Error generating outputs: {e}")
+                st.stop()
+
         else:
-            # CSV already has actual_output
-            st.info("Using `actual_output` from uploaded CSV.")
+            # User chose to use existing actual_output column
+            if "actual_output" not in df.columns:
+                st.error("You checked that CSV includes `actual_output`, but it's missing.")
+                st.stop()
+            st.info("Using existing `actual_output` column from CSV.")
 
-        # Run DeepEval scoring
+        # --- Run DeepEval scoring ---
         with st.spinner("Running DeepEval scoring..."):
             try:
                 results_df = run_full_deepeval(df, st.session_state["rubrics"], mode="single_turn", eval_model=eval_model)
@@ -534,7 +534,7 @@ else:
                 st.success("DeepEval run complete.")
             except Exception as e:
                 st.error("Error during evaluation:")
-                st.exception(e)  # This shows full traceback inside Streamlit
+                st.exception(e)
                 st.code(traceback.format_exc(), language="python")
                 st.stop()
 
