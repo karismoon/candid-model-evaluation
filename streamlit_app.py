@@ -255,7 +255,7 @@ if mode == "🧩 Rubric Editor":
     if "rubrics" not in st.session_state:
         st.warning("⚠️ Please upload a custom rubrics.json to continue.")
 
-        if uploaded_file is not None:
+        if "rubrics" is not None:
             st.session_state["rubrics"] = json.load(uploaded_file)
             st.success("✅ Custom rubrics loaded successfully!")
         else:
