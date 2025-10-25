@@ -522,7 +522,9 @@ else:
                 st.session_state["results"] = results_df
                 st.success("DeepEval run complete.")
             except Exception as e:
-                st.error(f"Error during evaluation: {e}")
+                st.error("Error during evaluation:")
+                st.exception(e)  # This shows full traceback inside Streamlit
+                st.code(traceback.format_exc(), language="python")
                 st.stop()
 
     # Show results if available
