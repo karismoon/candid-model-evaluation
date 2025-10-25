@@ -4,6 +4,7 @@ import pandas as pd
 import json
 import os
 import io
+import traceback
 from typing import List, Dict, Any, Optional
 from openai import OpenAI
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
