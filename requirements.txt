@@ -1,5 +1,5 @@
 streamlit
 openai>=1.51.0
-deepeval
+deepeval==3.6.7
 pandas
 matplotlib
