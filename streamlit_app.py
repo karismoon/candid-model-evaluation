@@ -235,7 +235,7 @@ if mode == "🧩 Rubric Editor":
 
     col1, col2 = st.columns([2, 1])
     with col1:
-        uploaded_rubrics = st.file_uploader("Upload rubrics.json", type=["json"], accept_multiple_files=False, label_visibility="collapsed")
+        uploaded_rubrics = st.file_uploader("Upload rubrics", type=["json"], accept_multiple_files=False, label_visibility="collapsed")
         if uploaded_rubrics is not None:
             try:
                 rubrics_data = json.load(uploaded_rubrics)
@@ -292,7 +292,7 @@ else:
     st.header("🤖 Model & Prompt Testing")
 
     st.markdown(
-        "Upload a `test_cases.csv` with columns: `input`, `expected_output`. "
+        "Upload a CSV of test cases with columns: `input`, `expected_output`. "
         "If your CSV already contains `actual_output`, tick the box to skip generation."
     )
 
@@ -320,7 +320,7 @@ else:
         st.stop()
 
     # Test cases upload / reuse
-    uploaded_csv = st.file_uploader("Upload test_cases.csv", type=["csv"])
+    uploaded_csv = st.file_uploader("Upload test cases CSV", type=["csv"])
     use_existing_actuals = st.checkbox("CSV already contains `actual_output` column (skip model generation)")
 
     if uploaded_csv is not None:
@@ -344,11 +344,11 @@ else:
             st.stop()
     else:
         if st.session_state.get("df_inputs") is None:
-            st.info("Upload test_cases.csv to run evaluations.")
+            st.info("Upload CSV of test cases to run evaluations.")
             st.stop()
         else:
             df_inputs = st.session_state["df_inputs"]
-            st.info("Using previously uploaded test_cases.csv in session.")
+            st.info("Using previously uploaded CSV of test cases in session.")
 
     # --------------------------
     # API keys and model selection
@@ -376,7 +376,13 @@ else:
             if provider == "OpenAI":
                 gen_model = st.selectbox(
                     "Model (OpenAI)",
-                    ["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"],
+                    [
+                        "gpt-4.1",
+                        "gpt-4.1-mini",
+                        "gpt-4o",
+                        "gpt-4o-mini",
+                        "gpt-3.5-turbo",
+                    ],
                     index=0,
                     key="gen_model_openai",
                 )
