@@ -416,8 +416,14 @@ else:
                 key="deepeval_api_key",
             )
             eval_model = st.selectbox(
-                "Model for evaluation (OpenAI only)",
-                ["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"],
+                "Model (OpenAI)",
+                    [
+                        "gpt-4.1",
+                        "gpt-4.1-mini",
+                        "gpt-4o",
+                        "gpt-4o-mini",
+                        "gpt-3.5-turbo",
+                    ],
                 index=0,
                 key="deepeval_model",
             )
