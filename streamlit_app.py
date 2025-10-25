@@ -254,7 +254,6 @@ if mode == "🧩 Rubric Editor":
     # Show editable table
     if "rubrics" not in st.session_state:
         st.warning("⚠️ Please upload a custom rubrics.json to continue.")
-        uploaded_file = st.file_uploader("Upload rubrics.json", type=["json"])
 
         if uploaded_file is not None:
             st.session_state["rubrics"] = json.load(uploaded_file)
