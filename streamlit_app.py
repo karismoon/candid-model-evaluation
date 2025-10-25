@@ -229,7 +229,7 @@ if mode == "🧩 Rubric Editor":
     st.header("🧩 Rubric Editor")
 
     st.markdown(
-        "Upload a `rubrics.json` or edit the rubrics in the table below. "
+        "Upload a rubrics json or edit the rubrics in the table below. "
         "You can add new rows and fully control each rubric entry. Changes persist in this browser session."
     )
 
@@ -249,7 +249,7 @@ if mode == "🧩 Rubric Editor":
             buf = io.StringIO()
             json.dump(st.session_state["rubrics"], buf, indent=2)
             st.download_button(
-                label="⬇️ Download rubrics.json",
+                label="⬇️ Download rubrics",
                 data=buf.getvalue(),
                 file_name="rubrics.json",
                 mime="application/json",
@@ -260,7 +260,7 @@ if mode == "🧩 Rubric Editor":
 
     # --- Main rubric handling ---
     if "rubrics" not in st.session_state or not st.session_state["rubrics"]:
-        st.warning("⚠️ Please upload a custom rubrics.json to continue.")
+        st.warning("⚠️ Please upload a custom rubrics json to continue.")
         st.stop()  # pause app execution until rubrics are uploaded
 
     # Now it's safe to build the table
