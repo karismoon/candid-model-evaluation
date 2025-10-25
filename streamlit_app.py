@@ -105,39 +105,17 @@ def load_metrics(path: str, mode: str = "multi_turn", eval_model: Optional[str] 
     for rubric in rubrics:
         if mode not in rubric.get("applies_to", []):
             continue
-
-        # Map old DeepEval 0.x parameter names to new 3.x ones
-        param_map = {
-            "input": "input_text",
-            "expected_output": "expected_output_text",
-            "actual_output": "actual_output_text",
-        }
-
-        # Safely translate rubric params to the correct LLMTestCaseParams attributes
-        mapped_params = []
-        for p in rubric["params"]:
-            mapped_name = param_map.get(p, p)
-            try:
-                mapped_params.append(getattr(LLMTestCaseParams, mapped_name))
-            except AttributeError:
-                print(f"⚠️ Warning: Unknown LLMTestCaseParam '{p}' (mapped to '{mapped_name}')")
-
         kwargs = {
             "name": rubric["name"],
             "evaluation_steps": rubric["steps"],
-            "evaluation_params": mapped_params,
+            "evaluation_params": [getattr(LLMTestCaseParams, p) for p in rubric["params"]],
         }
-
         if "threshold" in rubric and rubric["threshold"] is not None:
             kwargs["threshold"] = rubric["threshold"]
-
         if eval_model:
-            kwargs["model"] = eval_model
-
+            kwargs["model"] = eval_model   
         metrics.append(GEval(**kwargs))
-
     return metrics
-
 
 def run_full_deepeval(df: pd.DataFrame, rubrics: List[Dict[str, Any]], mode: str = "single_turn", eval_model: Optional[str] = None,) -> pd.DataFrame:
     """
@@ -154,7 +132,6 @@ def run_full_deepeval(df: pd.DataFrame, rubrics: List[Dict[str, Any]], mode: str
     all_results = []
 
     for i, row in df.iterrows():
-
         test_case = LLMTestCase(
             input=row["input"],
             actual_output=row["actual_output"],
@@ -349,7 +326,6 @@ else:
     if uploaded_csv is not None:
         try:
             df_inputs = pd.read_csv(uploaded_csv)
-
             # Ensure required columns exist
             if "input" not in df_inputs.columns or "expected_output" not in df_inputs.columns:
                 st.error("CSV must contain at least `input` and `expected_output` columns.")
@@ -545,15 +521,7 @@ else:
                 st.session_state["results"] = results_df
                 st.success("DeepEval run complete.")
             except Exception as e:
-                st.error("⚠️ Error during evaluation — full details below:")
-                st.code(traceback.format_exc())  # full stack trace
-                # Also print to console (visible in terminal logs)
-                print(traceback.format_exc())
-
-                # Optional: print first few rows for context
-                st.write("First few rows of df being evaluated:")
-                st.dataframe(df.head())
-
+                st.error(f"Error during evaluation: {e}")
                 st.stop()
 
     # Show results if available
