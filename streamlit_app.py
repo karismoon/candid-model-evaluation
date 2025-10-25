@@ -268,7 +268,7 @@ if mode == "🧩 Rubric Editor":
     # Show editable table
     df_rubrics = rubrics_to_df(st.session_state["rubrics"])
     st.markdown("**Edit rubrics table** — `params` and `applies_to` are comma-separated lists.")
-    edited_df = st.data_editor(df_rubrics, num_rows="dynamic", use_container_width=True)
+    edited_df = st.data_editor(df_rubrics, num_rows="dynamic", width="stretch")
 
     # Add new rubric button
     if st.button("➕ Add new rubric row"):
@@ -531,7 +531,7 @@ else:
     if st.session_state.get("results") is not None:
         results_df: pd.DataFrame = st.session_state["results"]
         st.subheader("Results table")
-        st.dataframe(results_df.fillna(""), use_container_width=True)
+        st.dataframe(results_df.fillna(""), width="stretch")
 
         # Download results CSV
         csv_buf = results_df.to_csv(index=False)
