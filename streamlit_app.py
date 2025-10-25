@@ -245,19 +245,18 @@ if mode == "🧩 Rubric Editor":
                 st.error(f"❌ Error loading rubrics.json: {e}")
 
     with col2:
-        # Download current rubrics if available
         if "rubrics" in st.session_state and st.session_state["rubrics"]:
-            if st.button("Download current rubrics.json"):
-                buf = io.StringIO()
-                json.dump(st.session_state["rubrics"], buf, indent=2)
-                st.download_button(
-                    "Click to download",
-                    buf.getvalue(),
-                    file_name="rubrics.json",
-                    mime="application/json",
-                )
+            buf = io.StringIO()
+            json.dump(st.session_state["rubrics"], buf, indent=2)
+            st.download_button(
+                label="⬇️ Download rubrics.json",
+                data=buf.getvalue(),
+                file_name="rubrics.json",
+                mime="application/json",
+                use_container_width=True,  # keeps it nicely sized in the column
+            )
         else:
-            st.info("📁 No rubrics loaded yet — upload one to enable download.")
+            st.info("No rubrics loaded yet.")
 
     # --- Main rubric handling ---
     if "rubrics" not in st.session_state or not st.session_state["rubrics"]:
