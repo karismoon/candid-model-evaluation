@@ -240,27 +240,33 @@ if mode == "🧩 Rubric Editor":
             try:
                 rubrics_data = json.load(uploaded_rubrics)
                 st.session_state["rubrics"] = rubrics_data
-                st.success("Loaded rubrics.json into session.")
+                st.success("✅ Loaded rubrics.json into session.")
             except Exception as e:
-                st.error(f"Error loading rubrics.json: {e}")
+                st.error(f"❌ Error loading rubrics.json: {e}")
 
     with col2:
-        # Download current rubrics
-        if st.button("Download current rubrics.json"):
-            buf = io.StringIO()
-            json.dump(st.session_state["rubrics"], buf, indent=2)
-            st.download_button("Click to download", buf.getvalue(), file_name="rubrics.json", mime="application/json")
-
-    # Show editable table
-    if "rubrics" not in st.session_state:
-        st.warning("⚠️ Please upload a custom rubrics.json to continue.")
-
-        if "rubrics" is not None:
-            st.session_state["rubrics"] = json.load(uploaded_file)
-            st.success("✅ Custom rubrics loaded successfully!")
+        # Download current rubrics if available
+        if "rubrics" in st.session_state and st.session_state["rubrics"]:
+            if st.button("Download current rubrics.json"):
+                buf = io.StringIO()
+                json.dump(st.session_state["rubrics"], buf, indent=2)
+                st.download_button(
+                    "Click to download",
+                    buf.getvalue(),
+                    file_name="rubrics.json",
+                    mime="application/json",
+                )
         else:
-            st.stop()  # stop execution until user uploads a file
+            st.info("📁 No rubrics loaded yet — upload one to enable download.")
+
+    # --- Main rubric handling ---
+    if "rubrics" not in st.session_state or not st.session_state["rubrics"]:
+        st.warning("⚠️ Please upload a custom rubrics.json to continue.")
+        st.stop()  # pause app execution until rubrics are uploaded
+
+    # Now it's safe to build the table
     df_rubrics = rubrics_to_df(st.session_state["rubrics"])
+
     st.markdown("**Edit rubrics table** — `params` and `applies_to` are comma-separated lists.")
     edited_df = st.data_editor(df_rubrics, num_rows="dynamic", width="stretch")
 
