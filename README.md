@@ -10,17 +10,15 @@ Supports **OpenAI**, **Anthropic (Claude)**, and **Google (Gemini)** models for 
 ### 🚀 Run locally
 
 1. **Install dependencies**
+
    ```bash
    pip install -r requirements.txt
-````
 
 2. **Start the app**
 
    ```bash
    streamlit run streamlit_app.py
    ```
-
----
 
 ### 🧩 Features
 
@@ -29,4 +27,3 @@ Supports **OpenAI**, **Anthropic (Claude)**, and **Google (Gemini)** models for 
 * **DeepEval Integration** – Automatically scores and visualizes performance metrics.
 * **Visual Reports** – View average scores, pass/fail ratios, and export results as CSV.
 
-```
