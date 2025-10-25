@@ -235,7 +235,7 @@ if mode == "🧩 Rubric Editor":
 
     col1, col2 = st.columns([2, 1])
     with col1:
-        uploaded_rubrics = st.file_uploader("Upload rubrics.json", type=["json"], accept_multiple_files=False)
+        uploaded_rubrics = st.file_uploader("Upload rubrics.json", type=["json"], accept_multiple_files=False, label_visibility="collapsed")
         if uploaded_rubrics is not None:
             try:
                 rubrics_data = json.load(uploaded_rubrics)
