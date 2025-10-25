@@ -10,6 +10,8 @@ from openai import OpenAI
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import GEval
 import matplotlib.pyplot as plt
+import subprocess, sys
+subprocess.run([sys.executable, "-m", "pip", "show", "deepeval"])
 
 # --------------------------
 # Helper functions
