@@ -363,7 +363,7 @@ else:
             st.markdown("**Output Generation (user model)**")
             provider = st.selectbox(
                 "Provider for output generation",
-                options=["OpenAI", "Anthropic (Claude)", "Google (Gemini)"],
+                options=["OpenAI", "Anthropic (Claude)"],
                 index=0,
                 key="provider_select",
             )
@@ -386,19 +386,13 @@ else:
                     index=0,
                     key="gen_model_openai",
                 )
+
             elif provider == "Anthropic (Claude)":
                 gen_model = st.selectbox(
                     "Model (Claude)",
                     ["claude-3-5-sonnet", "claude-3-opus", "claude-3-haiku"],
                     index=0,
                     key="gen_model_claude",
-                )
-            else:
-                gen_model = st.selectbox(
-                    "Model (Gemini)",
-                    ["gemini-1.5-pro", "gemini-1.5-flash"],
-                    index=0,
-                    key="gen_model_gemini",
                 )
 
             system_prompt = st.text_area(
@@ -466,57 +460,64 @@ else:
         should_generate = not use_existing_actuals  # user didn't check box → generate outputs
 
         if should_generate:
-            # We’ll overwrite or create actual_output from model generation
             if not gen_api_key:
                 st.error("API key is required to generate outputs.")
                 st.stop()
 
+            outputs = []
+            total = len(df)
+            progress_bar = st.progress(0)
+
             try:
+                # ----------------------------------
+                # ✅ OpenAI Generation
+                # ----------------------------------
                 if provider == "OpenAI":
                     client = OpenAI(api_key=gen_api_key)
-                    outputs = generate_outputs_via_openai(df, client, gen_model, system_prompt)
 
+                    for i, row in df.iterrows():
+                        user_input = row["input"]
+                        with st.spinner(f"Generating output {i+1}/{total}..."):
+                            resp = client.chat.completions.create(
+                                model=gen_model,
+                                messages=[
+                                    {"role": "system", "content": system_prompt},
+                                    {"role": "user", "content": user_input},
+                                ],
+                            )
+                            outputs.append(resp.choices[0].message.content)
+
+                        progress_bar.progress((i + 1) / total)
+
+                # ----------------------------------
+                # ✅ Anthropic (Claude) Generation
+                # ----------------------------------
                 elif provider == "Anthropic (Claude)":
                     from anthropic import Anthropic
                     client = Anthropic(api_key=gen_api_key)
-                    outputs = []
-                    total = len(df)
-                    progress_bar = st.progress(0)
+
                     for i, row in df.iterrows():
                         user_input = row["input"]
                         with st.spinner(f"Generating output {i+1}/{total}..."):
                             msg = client.messages.create(
                                 model=gen_model,
                                 max_tokens=500,
+                                system=system_prompt,  # ✅ correct Claude placement
                                 messages=[
-                                    {"role": "system", "content": system_prompt},
-                                    {"role": "user", "content": user_input},
+                                    {"role": "user", "content": user_input}
                                 ],
                             )
                             outputs.append(msg.content[0].text)
-                            progress_bar.progress((i + 1) / total)
-                    progress_bar.empty()
 
-                elif provider == "Google (Gemini)":
-                    import google.generativeai as genai
-                    genai.configure(api_key=gen_api_key)
-                    model_instance = genai.GenerativeModel(gen_model)
-                    outputs = []
-                    total = len(df)
-                    progress_bar = st.progress(0)
-                    for i, row in df.iterrows():
-                        user_input = row["input"]
-                        with st.spinner(f"Generating output {i+1}/{total}..."):
-                            resp = model_instance.generate_content(f"{system_prompt}\n\nUser: {user_input}")
-                            outputs.append(resp.text)
-                            progress_bar.progress((i + 1) / total)
-                    progress_bar.empty()
+                        progress_bar.progress((i + 1) / total)
 
+                progress_bar.empty()
                 df["actual_output"] = outputs
                 st.success("✅ Generated new model outputs.")
 
             except Exception as e:
-                st.error(f"Error generating outputs: {e}")
+                progress_bar.empty()
+                st.error(f"❌ Error generating outputs: {e}")
                 st.stop()
 
         else:
