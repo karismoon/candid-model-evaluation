@@ -390,7 +390,11 @@ else:
             elif provider == "Anthropic (Claude)":
                 gen_model = st.selectbox(
                     "Model (Claude)",
-                    ["claude-3-5-sonnet", "claude-3-opus", "claude-3-haiku"],
+                    [
+                        "claude-3-5-sonnet-20241022",
+                        "claude-3-opus-20240229",
+                        "claude-3-haiku-20240307"
+                    ],
                     index=0,
                     key="gen_model_claude",
                 )
