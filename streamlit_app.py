@@ -392,7 +392,8 @@ else:
                     "Model (Claude)",
                     [
                         "claude-3-opus-20240229",
-                        "claude-3-haiku-20240307"
+                        "claude-3-haiku-20240307",
+                        "claude-sonnet-4-5",
                     ],
                     index=0,
                     key="gen_model_claude",
